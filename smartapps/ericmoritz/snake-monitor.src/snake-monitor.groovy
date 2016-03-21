@@ -56,16 +56,24 @@ def initialize() {
 
 def checkTemp() {
 	def currentTemp = tempSensor.currentValue("temperature")
-    def currentPercent = heatLamp.currentValue("level")
-    if(settings.minTemp > currentTemp) {
-    	def newLevel = currentPercent + settings.adjustBy
-        log.debug("Current Temp ($currentTemp) is less than $settings.minTemp, raising to $newLevel")
-        heatLamp.setLevel(newLevel)
-    } else if(currentTemp > settings.maxTemp) {    	
-    	def newLevel = currentPercent - settings.adjustBy
-        log.debug("Current Temp ($currentTemp) is more than $settings.maxTemp, lowering to $newLevel")
-        heatLamp.setLevel(newLevel)
+    def currentLevel = heatLamp.currentValue("level")
+    def adjustBy = _adjustBy();
+    
+    def newLevel = currentLevel + adjustBy
+    if(adjustBy != 0 && newLevel > 0 && newLevel < 100) {
+      log.debug("Current Tempature $currentTemp, adjusting by $adjustBy")
+      heatLamp.setLevel(newLevel)
     } else {
-	    log.debug("Current Temp ($currentTemp) is fine")
+      log.debug("Current Tempature is ok")
+    }
+}
+
+def _adjustBy() {
+    if(settings.minTemp > currentTemp) {
+    	return settings.adjustBy
+    } else if(currentTemp > settings.maxTemp) {    	
+    	return settings.adjustBy * -1
+    } else {
+        return 0
     }
 }
