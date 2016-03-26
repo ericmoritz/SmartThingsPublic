@@ -13,8 +13,10 @@
  *  for the specific language governing permissions and limitations under the License.
  *
  */
+ def name = "Snake Monitor"
+ def version = "0.2"
 definition(
-    name: "Snake Monitor",
+    name: name,
     namespace: "ericmoritz",
     author: "Eric Moritz",
     description: "Manages a snake temperature and night off",
@@ -25,6 +27,9 @@ definition(
 
 
 preferences {
+    section("$name, version $version") {
+	}
+    
 	section("Devices") {
     	input "tempSensor", "capability.temperatureMeasurement", title: "Thermometer?"
         input "heatLamp", "capability.switchLevel", title: "Heat Lamp?"
@@ -57,18 +62,20 @@ def initialize() {
 def checkTemp() {
 	def currentTemp = tempSensor.currentValue("temperature")
     def currentLevel = heatLamp.currentValue("level")
-    def adjustBy = _adjustBy();
+    def adjustBy = _adjustBy(currentTemp);
     
     def newLevel = currentLevel + adjustBy
+    def msg = "Current Tempature $currentTemp, adjusting by $adjustBy %"
     if(adjustBy != 0 && newLevel > 0 && newLevel < 100) {
-      log.debug("Current Tempature $currentTemp, adjusting by $adjustBy")
+      sendNotification(msg)
+      log.debug(msg)
       heatLamp.setLevel(newLevel)
     } else {
       log.debug("Current Tempature is ok")
     }
 }
 
-def _adjustBy() {
+def _adjustBy(currentTemp) {
     if(settings.minTemp > currentTemp) {
     	return settings.adjustBy
     } else if(currentTemp > settings.maxTemp) {    	
